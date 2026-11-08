@@ -1,0 +1,30 @@
+name: Build tweak
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unpack project
+        run: unzip -o NoAds-theos.zip
+
+      - name: Install Theos and tools
+        run: |
+          brew install ldid dpkg
+          git clone --recursive --depth=1 https://github.com/theos/theos.git "$HOME/theos"
+          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
+
+      - name: Build package
+        working-directory: NoAds
+        run: make package FINALPACKAGE=1
+
+      - name: Upload deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: NoAds-deb
+          path: NoAds/packages/*.deb
